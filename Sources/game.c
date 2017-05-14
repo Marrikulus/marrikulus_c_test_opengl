@@ -12,6 +12,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
+#include <unistd.h>
 #define GL_LOG_FILE "gl.log"
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -38,7 +40,6 @@ typedef struct
 	vec2 uv;
 } Vertex;
 
-
 void mouseCallback(GLFWwindow* window, double positionX, double positionY);
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -51,9 +52,6 @@ int gl_log_err(const char* message, ...);
 int gl_log(const char* message, ...);
 int restart_gl_log();
 void updateFpsCounter(GLFWwindow* window);
-void moveCamera();
-
-//static void show_info_log( GLuint object, PFNGLGETSHADERIVPROC glGet__iv, PFNGLGETSHADERINFOLOGPROC glGet__InfoLog);
 
 
 ///////////////////////////////////////////////////
@@ -61,7 +59,6 @@ void moveCamera();
 
 // window
 GLFWwindow* window;
-//const unsigned int WIDTH = 800, HEIGHT = 600;
 GLfloat mixValue = 1.0f;
 
 Camera camera;
@@ -107,8 +104,8 @@ int init_game(int width, int height) {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWmonitor* mon = glfwGetPrimaryMonitor();
-	const GLFWvidmode* vmode = glfwGetVideoMode(mon);
+	//GLFWmonitor* mon = glfwGetPrimaryMonitor();
+	//const GLFWvidmode* vmode = glfwGetVideoMode(mon);
 
 	window = glfwCreateWindow(
 		SCREEN_WIDTH /*vmode->width*/, SCREEN_HEIGHT/*vmode->height*/, "Merancia", NULL, NULL
@@ -132,7 +129,7 @@ int init_game(int width, int height) {
 	printf("Renderer: %s\n", renderer);
 	printf("OpenGL version supported %s\n", version);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
 
@@ -143,6 +140,8 @@ int init_game(int width, int height) {
 	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetWindowCloseCallback(window, window_close_callback);
+
+	glfwSwapInterval(0);
 
 	return 0;
 }
@@ -192,7 +191,7 @@ void updateFpsCounter(GLFWwindow* window)
 	double currentSeconds = glfwGetTime();
 	double elapsedSeconds = currentSeconds - previousSeconds;
 
-	if (elapsedSeconds > 0.25)
+	if (elapsedSeconds > 0.20)
 	{
 		double fps = (double)frameCount / elapsedSeconds;
 		char tmp[128];
@@ -364,13 +363,22 @@ void start_game(){
 	GLint loc2 = glGetUniformLocation(shader.program, "textureSmile");
 	GLint alphaLoc = glGetUniformLocation(shader.program, "inalpha");
 
+	const double maxPeriod = 1.0 / 60;
+
 	while(!glfwWindowShouldClose(window)) {
-		updateFpsCounter(window);
-		GLfloat currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
+		GLfloat currentFrame 	= glfwGetTime();
+		GLfloat deltaTime 		= currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
 		glfwPollEvents();
 
+		GLfloat diff = maxPeriod - deltaTime;
+		if (diff > 0)
+		{
+			int sleepBle = diff*1000000;
+			usleep(sleepBle);
+
+		}
 		// ----- Clear ------ //
 		glClearColor(0.010f, 0.01f, 0.01f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
@@ -409,8 +417,7 @@ void start_game(){
 			mat4x4 model = {};
 			mat4x4_identity(model);
 			mat4x4_translate(model,cubePositions[i][0],cubePositions[i][1],cubePositions[i][2]);
-			GLfloat angle = 10.0f * i * glfwGetTime();
-			mat4x4_rotate(model, model, 1.0f, 0.3f, 0.5f, deg2rad(angle));
+			mat4x4_rotate_Z(model, model, deg2rad(fmod((float)(glfwGetTime()*5.0f), 360.0f)));
 
 			glUniformMatrix4fv(shader.modelLocation, 		1, GL_FALSE, *model);
 
@@ -419,6 +426,7 @@ void start_game(){
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
+		updateFpsCounter(window);
 	}
 
 	//-------------Deleting----------------//
