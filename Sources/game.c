@@ -132,7 +132,7 @@ int init_game(int width, int height) {
 	printf("Renderer: %s\n", renderer);
 	printf("OpenGL version supported %s\n", version);
 
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
 
@@ -370,7 +370,6 @@ void start_game(){
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		glfwPollEvents();
-		moveCamera();
 
 		// ----- Clear ------ //
 		glClearColor(0.010f, 0.01f, 0.01f, 1.0f);
@@ -399,20 +398,11 @@ void start_game(){
 
 		mat4x4 projection = {};
 		mat4x4_identity(projection);
-		mat4x4_perspective(projection,deg2rad(45), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, 100.0f);
+		mat4x4_perspective(projection,deg2rad(camera.Zoom), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(shader.viewLocation, 		1, GL_FALSE, *view);
 		glUniformMatrix4fv(shader.projectionLocation, 	1, GL_FALSE, *projection);
-		// ------- Color -------- //
-		//GLfloat timeValue = glfwGetTime();
-		//GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
-		//GLint vertexColorLocation = glGetUniformLocation(shader_programme, "ourColor");
-		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-		// ----- Draw ------ //
 		glBindVertexArray(vao);
 		for (int i = 0; i < 10; i++)
 		{
@@ -442,45 +432,10 @@ void closing_game()
 }
 
 
-void moveCamera()
-{
-	GLfloat cameraSpeed = 5.00f * deltaTime;
-	vec3 CameraRight = {};
-	vec3_mul_cross(CameraRight,camera.Front, camera.Up);
-	vec3 direction = {};
-	if(keys[GLFW_KEY_W])
-	{
-		vec3_add(direction,direction, camera.Front);
-	}
-	if(keys[GLFW_KEY_S]){
-		vec3 back = {};
-		vec3_sub(back, (vec3){}, camera.Front);
-		vec3_add(direction,direction, back);
-	}
-	if(keys[GLFW_KEY_A])
-	{
-		vec3 cameraLeft = {};
-		vec3_sub(cameraLeft, (vec3){}, CameraRight);
-		vec3_add(direction,direction, cameraLeft);
-	}
-	if(keys[GLFW_KEY_D])
-	{
-		vec3_add(direction,direction, CameraRight);
-	}
-	if (vec3_len(direction) > 0.1)
-	{
-		vec3 deltaPosition = {};
-		vec3_norm(direction,direction);
-		vec3_scale(deltaPosition,direction,cameraSpeed);
-		vec3_add(camera.Position,camera.Position, deltaPosition);
-	}
-}
-
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	ProcessMouseScroll(&camera, yoffset);
 }
-
 
 void mouseCallback(GLFWwindow* window, double positionX, double positionY)
 {
@@ -543,97 +498,6 @@ void window_close_callback(GLFWwindow* window)
 	printf("trying to close window \n");
 }
 
-
-/*
-static GLuint makeShader(GLenum type, const char *code)
-{
-	//GLint length = strlen(code);
-	GLuint shader;
-	GLint shader_ok;
-
-	shader = glCreateShader(type);
-	glShaderSource(shader, 1, &code, NULL);
-	glCompileShader(shader);
-
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
-	if (!shader_ok)
-	{
-		show_info_log(shader, glGetShaderiv, glGetShaderInfoLog);
-		glDeleteShader(shader);
-		return 0;
-	}
-
-	return shader;
-}
-
-static GLint makeProgram(GLuint vertexShader, GLuint fragmentShader)
-{
-	GLint programOk;
-
-	GLuint program = glCreateProgram();
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
-	glLinkProgram(program);
-	glGetProgramiv(program, GL_LINK_STATUS, &programOk);
-	if (!programOk)
-	{
-		show_info_log(program, glGetProgramiv, glGetProgramInfoLog);
-		glDeleteProgram(program);
-		return 0;
-	}
-	return program;
-}
-
-static int makeResources()
-{
-	glResources.vertexShader = makeShader(GL_VERTEX_SHADER, vertex_shader);
-	if (glResources.vertexShader == 0)
-	{
-		return 0;
-	}
-
-	glResources.fragmentShader = makeShader(GL_FRAGMENT_SHADER, fragment_shader);
-	if (glResources.fragmentShader == 0)
-	{
-		return 0;
-	}
-
-	glResources.program = makeProgram(glResources.vertexShader, glResources.fragmentShader);
-	if (glResources.program == 0)
-	{
-		return 0;
-	}
-
-	//glResources.uniforms.fadeFactor
-	//    = glGetUniformLocation(glResources.program, "fade_factor");
-	//glResources.uniforms.textures[0]
-	//    = glGetUniformLocation(glResources.program, "textures[0]");
-	//glResources.uniforms.textures[1]
-	//    = glGetUniformLocation(glResources.program, "textures[1]");
-
-	glResources.attributes.position = glGetAttribLocation(glResources.program, "position");
-
-	return 1;
-}
-
-static void show_info_log(
-	GLuint object,
-	PFNGLGETSHADERIVPROC glGet__iv,
-	PFNGLGETSHADERINFOLOGPROC glGet__InfoLog
-)
-{
-	GLint log_length;
-	char *log;
-
-	glGet__iv(object, GL_INFO_LOG_LENGTH, &log_length);
-	log = malloc(log_length);
-	glGet__InfoLog(object, log_length, NULL, log);
-	fprintf(stderr, "%s", log);
-	free(log);
-}
-
-
-*/
 int restart_gl_log() {
   FILE* file = fopen(GL_LOG_FILE, "w");
   if(!file) {
