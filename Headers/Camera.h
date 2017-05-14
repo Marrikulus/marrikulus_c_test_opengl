@@ -1,9 +1,9 @@
 
 const GLfloat YAW 			= -90.0f;
 const GLfloat PITCH 		= 0.0f;
-const GLfloat SPEED 		= 0.0f;
-const GLfloat SENSITIVITY 	= 0.0f;
-const GLfloat ZOOM 			= 0.0f;
+const GLfloat SPEED 		= 3.0f;
+const GLfloat SENSITIVITY 	= 0.20f;
+const GLfloat ZOOM 			= 45.0f;
 
 typedef enum
 {
@@ -69,9 +69,8 @@ void updateCameraVectors(Camera *camera)
 
 void ProcessMouseMovement(Camera *camera, GLfloat xoffset, GLfloat yoffset, GLboolean contrainPitch)
 {
-	GLfloat sensitivity = 0.03f;
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
+	xoffset *= camera->MouseSensitivity;
+	yoffset *= camera->MouseSensitivity;
 
 	camera->Pitch += yoffset;
 	camera->Yaw   += xoffset;
