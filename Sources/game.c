@@ -62,7 +62,9 @@ GLFWwindow* window;
 GLfloat mixValue = 1.0f;
 
 Camera camera;
-ShaderProgram shader;
+//ShaderProgram shader;
+ShaderProgram lightShader;
+ShaderProgram objectShader;
 // Time
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
@@ -209,144 +211,85 @@ void start_game(){
 	printf("Starting Game\n");
 
 	//-------------Loading----------------//
-	shader = makeShaderProgram("../Shaders/FragmentShader.frag", "../Shaders/VertexShader.vert");
+	//shader = makeShaderProgram("../Shaders/FragmentShader.frag", "../Shaders/VertexShader.vert");
+	lightShader 	= makeShaderProgram("../Shaders/ColorLight.fs", "../Shaders/ColorLight.vs");
+	objectShader 	= makeShaderProgram("../Shaders/ColorObject.fs", "../Shaders/ColorObject.vs");
 
-	if (shader.program == 0)
+	if (lightShader.program == 0 || objectShader.program == 0)
 	{
 		printf("Shader Failed\n");
 		return;
 	}
 
-
-//	vec4 vector = {1.0f, 0.0f, 0.0f, 1.0f};
-//	vec4 newdirection = {0.0f, 0.0f, 0.0f, 0.0f};
-//	mat4x4 trans;
-//	mat4x4_identity(trans);
-//	mat4x4_translate(trans, 1,1,0);
-//	printf("x:%f y:%f z:%f w:%f\n", trans[0][0], trans[1][0],trans[2][0],trans[3][0]);
-//	printf("x:%f y:%f z:%f w:%f\n", trans[0][1], trans[1][1],trans[2][1],trans[3][1]);
-//	printf("x:%f y:%f z:%f w:%f\n", trans[0][2], trans[1][2],trans[2][2],trans[3][2]);
-//	printf("x:%f y:%f z:%f w:%f\n", trans[0][3], trans[1][3],trans[2][3],trans[3][3]);
-//	printf("\n");
-//	vec4 vector2 = {};
-//	mat4x4_mul_vec4(vector2, trans, vector);
-//	printf("vec x:%f y:%f z:%f w:%f\n", vector2[0], vector2[1],vector2[2],vector2[3]);
-	//printf("%f\n", M_PI);
-	//printf("x:%f y:%f z:%f w:%f\n", trans[0][0], trans[1][0],trans[2][0],trans[3][0]);
-	//printf("x:%f y:%f z:%f w:%f\n", trans[0][1], trans[1][1],trans[2][1],trans[3][1]);
-	//printf("x:%f y:%f z:%f w:%f\n", trans[0][2], trans[1][2],trans[2][2],trans[3][2]);
-	//printf("x:%f y:%f z:%f w:%f\n", trans[0][3], trans[1][3],trans[2][3],trans[3][3]);
-
-	//-------------Data----------------//
-
-	//GLfloat vertices[] = {
-	//	// Positions 		  //Colors
-	//	 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f, // Bottom Right
-	//	-0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f, // Bottom Left
-	//	 0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f, // Top
-	//};
-
-	//GLfloat texCoords[] = {
-	//0.0f, 0.0f,  // Lower-left corner
-	//1.0f, 0.0f,  // Lower-right corner
-	//0.5f, 1.0f   // Top-center corner
-	//};
-
-	//GLfloat boxVertices[] = {
-	//	 0.5f,  0.5f, 0.0f,  // Top Right
-	//	 0.5f, -0.5f, 0.0f,  // Bottom Right
-	//	-0.5f, -0.5f, 0.0f,  // Bottom Left
-	//	-0.5f,  0.5f, 0.0f   // Top Left
-	//};
-
-	//1.0f, 0.0f, 0.0f,
-	//0.0f, 1.0f, 0.0f,
-	//0.0f, 0.0f, 1.0f,
-	//1.0f, 1.0f, 0.0f,
-
-	//Vertex vertices[] = {
-	//	// positions            // texture coords
-	//	 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
-	//	 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
-	//	-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
-	//	-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left
-	//};
-
-
-	//GLuint indices[] = {  // Note that we start from 0!
-	//	0, 1, 3,   // First Triangle
-	//	1, 2, 3    // Second Triangle
-	//};
-
 	Vertex vertices[] = {
-		{{-0.5f, -0.5f, -0.5f},  {0.0f, 0.0f}},
-		{{ 0.5f, -0.5f, -0.5f},  {1.0f, 0.0f}},
-		{{ 0.5f,  0.5f, -0.5f},  {1.0f, 1.0f}},
-		{{ 0.5f,  0.5f, -0.5f},  {1.0f, 1.0f}},
-		{{-0.5f,  0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{-0.5f, -0.5f, -0.5f},  {0.0f, 0.0f}},
-		{{-0.5f, -0.5f,  0.5f},  {0.0f, 0.0f}},
-		{{ 0.5f, -0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{ 0.5f,  0.5f,  0.5f},  {1.0f, 1.0f}},
-		{{ 0.5f,  0.5f,  0.5f},  {1.0f, 1.0f}},
-		{{-0.5f,  0.5f,  0.5f},  {0.0f, 1.0f}},
-		{{-0.5f, -0.5f,  0.5f},  {0.0f, 0.0f}},
-		{{-0.5f,  0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{-0.5f,  0.5f, -0.5f},  {1.0f, 1.0f}},
-		{{-0.5f, -0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{-0.5f, -0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{-0.5f, -0.5f,  0.5f},  {0.0f, 0.0f}},
-		{{-0.5f,  0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{ 0.5f,  0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{ 0.5f,  0.5f, -0.5f},  {1.0f, 1.0f}},
-		{{ 0.5f, -0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{ 0.5f, -0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{ 0.5f, -0.5f,  0.5f},  {0.0f, 0.0f}},
-		{{ 0.5f,  0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{-0.5f, -0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{ 0.5f, -0.5f, -0.5f},  {1.0f, 1.0f}},
-		{{ 0.5f, -0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{ 0.5f, -0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{-0.5f, -0.5f,  0.5f},  {0.0f, 0.0f}},
-		{{-0.5f, -0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{-0.5f,  0.5f, -0.5f},  {0.0f, 1.0f}},
-		{{ 0.5f,  0.5f, -0.5f},  {1.0f, 1.0f}},
-		{{ 0.5f,  0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{ 0.5f,  0.5f,  0.5f},  {1.0f, 0.0f}},
-		{{-0.5f,  0.5f,  0.5f},  {0.0f, 0.0f}},
-		{{-0.5f,  0.5f, -0.5f},  {0.0f, 1.0f}}
+		{{-0.5f, -0.5f, -0.5f}},//  {0.0f, 0.0f}},
+		{{ 0.5f, -0.5f, -0.5f}},//  {1.0f, 0.0f}},
+		{{ 0.5f,  0.5f, -0.5f}},//  {1.0f, 1.0f}},
+		{{ 0.5f,  0.5f, -0.5f}},//  {1.0f, 1.0f}},
+		{{-0.5f,  0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{-0.5f, -0.5f, -0.5f}},//  {0.0f, 0.0f}},
+		{{-0.5f, -0.5f,  0.5f}},//  {0.0f, 0.0f}},
+		{{ 0.5f, -0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{ 0.5f,  0.5f,  0.5f}},//  {1.0f, 1.0f}},
+		{{ 0.5f,  0.5f,  0.5f}},//  {1.0f, 1.0f}},
+		{{-0.5f,  0.5f,  0.5f}},//  {0.0f, 1.0f}},
+		{{-0.5f, -0.5f,  0.5f}},//  {0.0f, 0.0f}},
+		{{-0.5f,  0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{-0.5f,  0.5f, -0.5f}},//  {1.0f, 1.0f}},
+		{{-0.5f, -0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{-0.5f, -0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{-0.5f, -0.5f,  0.5f}},//  {0.0f, 0.0f}},
+		{{-0.5f,  0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{ 0.5f,  0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{ 0.5f,  0.5f, -0.5f}},//  {1.0f, 1.0f}},
+		{{ 0.5f, -0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{ 0.5f, -0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{ 0.5f, -0.5f,  0.5f}},//  {0.0f, 0.0f}},
+		{{ 0.5f,  0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{-0.5f, -0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{ 0.5f, -0.5f, -0.5f}},//  {1.0f, 1.0f}},
+		{{ 0.5f, -0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{ 0.5f, -0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{-0.5f, -0.5f,  0.5f}},//  {0.0f, 0.0f}},
+		{{-0.5f, -0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{-0.5f,  0.5f, -0.5f}},//  {0.0f, 1.0f}},
+		{{ 0.5f,  0.5f, -0.5f}},//  {1.0f, 1.0f}},
+		{{ 0.5f,  0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{ 0.5f,  0.5f,  0.5f}},//  {1.0f, 0.0f}},
+		{{-0.5f,  0.5f,  0.5f}},//  {0.0f, 0.0f}},
+		{{-0.5f,  0.5f, -0.5f}},//  {0.0f, 1.0f}}
 	};
 
-	vec3 cubePositions[10] = {
-		 0.0f,  0.0f,  0.0f,
-		 2.0f,  5.0f, -15.0f,
-		-1.5f, -2.2f, -2.5f,
-		-3.8f, -2.0f, -12.3f,
-		 2.4f, -0.4f, -3.5f,
-		-1.7f,  3.0f, -7.5f,
-		 1.3f, -2.0f, -2.5f,
-		 1.5f,  2.0f, -2.5f,
-		 1.5f,  0.2f, -1.5f,
-		-1.3f,  1.0f, -1.5f,
-	};
+//	vec3 cubePositions[10] = {
+//		 0.0f,  0.0f,  0.0f,
+//		 2.0f,  5.0f, -15.0f,
+//		-1.5f, -2.2f, -2.5f,
+//		-3.8f, -2.0f, -12.3f,
+//		 2.4f, -0.4f, -3.5f,
+//		-1.7f,  3.0f, -7.5f,
+//		 1.3f, -2.0f, -2.5f,
+//		 1.5f,  2.0f, -2.5f,
+//		 1.5f,  0.2f, -1.5f,
+//		-1.3f,  1.0f, -1.5f,
+//	};
 
 	//-------------Buffer Creation----------------//
 
 	//glPolygonMode(GL_BACK, GL_LINE);
 
-	unsigned int vbo, vao;
-	glGenVertexArrays(1, &vao);
+	unsigned int vbo, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
 	glGenBuffers(1, &vbo);
 
-	glBindVertexArray(vao);
+	glBindVertexArray(cubeVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 		glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3* sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3* sizeof(GLfloat)));
+		//glEnableVertexAttribArray(1);
 
 		//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6* sizeof(GLfloat)));
 		//glEnableVertexAttribArray(2);
@@ -354,16 +297,30 @@ void start_game(){
 		//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	glDeleteBuffers(1, &vbo);
-	unsigned int textureContainer 	= makeTexture("../data/container.jpg", GL_RGB);
-	unsigned int textureSmile 		= makeTexture("../data/awesomeface.png", GL_RGBA);
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+
+	glBindVertexArray(lightVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+
+	//glDeleteBuffers(1, &vbo);
+	//unsigned int textureContainer 	= makeTexture("../data/container.jpg", GL_RGB);
+	//unsigned int textureSmile 		= makeTexture("../data/awesomeface.png", GL_RGBA);
 
 	//-------------loop----------------//
-	GLint loc1 = glGetUniformLocation(shader.program, "textureContainer");
-	GLint loc2 = glGetUniformLocation(shader.program, "textureSmile");
-	GLint alphaLoc = glGetUniformLocation(shader.program, "inalpha");
+	//GLint textureContainerLocation = glGetUniformLocation(shader.program, "textureContainer");
+	//GLint textureSmileLocation = glGetUniformLocation(shader.program, "textureSmile");
+	//GLint alphaLocation = glGetUniformLocation(shader.program, "inalpha");
 
-	const double maxPeriod = 1.0 / 60;
+	GLint objColorLocation 		= glGetUniformLocation(lightShader.program, "objectColor");
+	GLint lightColorLocation 	= glGetUniformLocation(lightShader.program, "lightColor");
+
+	const double maxPeriod = 1.0 / 80;
 
 	while(!glfwWindowShouldClose(window)) {
 		GLfloat currentFrame 	= glfwGetTime();
@@ -375,26 +332,23 @@ void start_game(){
 		GLfloat diff = maxPeriod - deltaTime;
 		if (diff > 0)
 		{
-			int sleepBle = diff*1000000;
+			int sleepBle = diff*2000000;
 			usleep(sleepBle);
-
 		}
 		// ----- Clear ------ //
 		glClearColor(0.010f, 0.01f, 0.01f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
 
-		glUseProgram(shader.program);
+		glUseProgram(lightShader.program);
 
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureContainer);
-		glUniform1i(loc1, 0);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, textureSmile);
-		glUniform1i(loc2, 1);
-
-		glUniform1f(alphaLoc, mixValue);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, textureContainer);
+		//glUniform1i(textureContainerLocation, 0);
+		//glActiveTexture(GL_TEXTURE1);
+		//glBindTexture(GL_TEXTURE_2D, textureSmile);
+		//glUniform1i(textureSmileLocation, 1);
+		//glUniform1f(alphaLocation, mixValue);
 
 
 		mat4x4 view = {};
@@ -411,18 +365,7 @@ void start_game(){
 		glUniformMatrix4fv(shader.viewLocation, 		1, GL_FALSE, *view);
 		glUniformMatrix4fv(shader.projectionLocation, 	1, GL_FALSE, *projection);
 
-		glBindVertexArray(vao);
-		for (int i = 0; i < 10; i++)
-		{
-			mat4x4 model = {};
-			mat4x4_identity(model);
-			mat4x4_translate(model,cubePositions[i][0],cubePositions[i][1],cubePositions[i][2]);
-			mat4x4_rotate_Z(model, model, deg2rad(fmod((float)(glfwGetTime()*5.0f), 360.0f)));
-
-			glUniformMatrix4fv(shader.modelLocation, 		1, GL_FALSE, *model);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glBindVertexArray(cubeVAO);
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
@@ -431,7 +374,7 @@ void start_game(){
 
 	//-------------Deleting----------------//
 	printf("Deleting Data\n");
-	glDeleteVertexArrays(1, &vao);
+	glDeleteVertexArrays(1, &cubeVAO);
 }
 
 void closing_game()
@@ -558,3 +501,75 @@ int gl_log_err(const char* message, ...) {
   return 1;
 }
 
+
+	/*for (int i = 0; i < 10; i++)
+		{
+			mat4x4 model = {};
+			mat4x4_identity(model);
+			mat4x4_translate(model,cubePositions[i][0],cubePositions[i][1],cubePositions[i][2]);
+			mat4x4_rotate_Z(model, model, deg2rad(fmod((float)(glfwGetTime()*5.0f), 360.0f)));
+
+			glUniformMatrix4fv(shader.modelLocation, 		1, GL_FALSE, &model);
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}*/
+
+//	vec4 vector = {1.0f, 0.0f, 0.0f, 1.0f};
+//	vec4 newdirection = {0.0f, 0.0f, 0.0f, 0.0f};
+//	mat4x4 trans;
+//	mat4x4_identity(trans);
+//	mat4x4_translate(trans, 1,1,0);
+//	printf("x:%f y:%f z:%f w:%f\n", trans[0][0], trans[1][0],trans[2][0],trans[3][0]);
+//	printf("x:%f y:%f z:%f w:%f\n", trans[0][1], trans[1][1],trans[2][1],trans[3][1]);
+//	printf("x:%f y:%f z:%f w:%f\n", trans[0][2], trans[1][2],trans[2][2],trans[3][2]);
+//	printf("x:%f y:%f z:%f w:%f\n", trans[0][3], trans[1][3],trans[2][3],trans[3][3]);
+//	printf("\n");
+//	vec4 vector2 = {};
+//	mat4x4_mul_vec4(vector2, trans, vector);
+//	printf("vec x:%f y:%f z:%f w:%f\n", vector2[0], vector2[1],vector2[2],vector2[3]);
+	//printf("%f\n", M_PI);
+	//printf("x:%f y:%f z:%f w:%f\n", trans[0][0], trans[1][0],trans[2][0],trans[3][0]);
+	//printf("x:%f y:%f z:%f w:%f\n", trans[0][1], trans[1][1],trans[2][1],trans[3][1]);
+	//printf("x:%f y:%f z:%f w:%f\n", trans[0][2], trans[1][2],trans[2][2],trans[3][2]);
+	//printf("x:%f y:%f z:%f w:%f\n", trans[0][3], trans[1][3],trans[2][3],trans[3][3]);
+
+	//-------------Data----------------//
+
+	//GLfloat vertices[] = {
+	//	// Positions 		  //Colors
+	//	 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f, // Bottom Right
+	//	-0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f, // Bottom Left
+	//	 0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f, // Top
+	//};
+
+	//GLfloat texCoords[] = {
+	//0.0f, 0.0f,  // Lower-left corner
+	//1.0f, 0.0f,  // Lower-right corner
+	//0.5f, 1.0f   // Top-center corner
+	//};
+
+	//GLfloat boxVertices[] = {
+	//	 0.5f,  0.5f, 0.0f,  // Top Right
+	//	 0.5f, -0.5f, 0.0f,  // Bottom Right
+	//	-0.5f, -0.5f, 0.0f,  // Bottom Left
+	//	-0.5f,  0.5f, 0.0f   // Top Left
+	//};
+
+	//1.0f, 0.0f, 0.0f,
+	//0.0f, 1.0f, 0.0f,
+	//0.0f, 0.0f, 1.0f,
+	//1.0f, 1.0f, 0.0f,
+
+	//Vertex vertices[] = {
+	//	// positions            // texture coords
+	//	 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+	//	 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+	//	-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+	//	-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left
+	//};
+
+
+	//GLuint indices[] = {  // Note that we start from 0!
+	//	0, 1, 3,   // First Triangle
+	//	1, 2, 3    // Second Triangle
+	//};
